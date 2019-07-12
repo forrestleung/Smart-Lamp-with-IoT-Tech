@@ -1,31 +1,41 @@
-#include <LiquidCrystal_I2C.h>
+#include <NTPClient.h>
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 
-#include <Wire.h>
+const char *ssid     = "forrest";
+const char *password = "testme21";
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+const long utcOffsetInSeconds = -25200;
 
-void setup() {
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
-Serial.begin(115200);
-Wire.begin(D2, D1);   //Use predefined PINS consts
-lcd.begin(20,4);      // The begin call takes the width and height. This
-                      // Should match the number provided to the constructor.
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
-lcd.backlight();      // Turn on the backlight.
+void setup(){
+  Serial.begin(9600);
 
-lcd.home();
+  WiFi.begin(ssid, password);
 
-lcd.setCursor(3, 0);  // Move the cursor at origin
-lcd.print("HELLO WORLD!,");
-lcd.setCursor(0, 1);
-lcd.print("Just testing");
-lcd.setCursor(0, 2);
-lcd.print("Thank you.");
-lcd.setCursor(5, 3);
-lcd.print("GOOD LUCK!");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay ( 500 );
+    Serial.print ( "." );
+  }
 
+  timeClient.begin();
 }
 
-void loop() {         
+void loop() {
+  timeClient.update();
 
+  Serial.print(daysOfTheWeek[timeClient.getDay()]);
+  Serial.print(", ");
+  Serial.print(timeClient.getHours());
+  Serial.print(":");
+  Serial.print(timeClient.getMinutes());
+  Serial.print(":");
+  Serial.println(timeClient.getSeconds());
+  //Serial.println(timeClient.getFormattedTime());
+
+  delay(1000);
 }
